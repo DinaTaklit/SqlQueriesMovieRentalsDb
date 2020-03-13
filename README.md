@@ -18,5 +18,23 @@ Use SQL to explore a database related to movie rentals. This project use: sql jo
 
 -  PostgreSQL: is an object-relational database management system. Object-relational databases use a hybrid approach to databases. Importantly, PostgreSQL allows the use of advanced functions (such as Window Functions), and even development and use of custom functions written in different programming languages. 
 
+1. Install PostgreSQL: 
+    - Install for [windows]
+    - Install for [maxos]
+2. Download [Sakila Database]  
+3. Load the databse: check this link [Load PostgreSQL Sample Database]
+4. Connecting back to the PostgreSQL server: Relaunch PgAdmin III and click on the PostgreSQL server within the Object browser.
+5. Connecting to the DVD rental database: Next click on the plus sign next to Databases to access the DVD rental database. 
+6. Choose the DVD Rental database: Choose the dvdrental database under Databases. 
+7. Running Queries on your dvdrental database: Click on the SQL icon and run your queries
   
+## Credits
+All credits go for data science nanodegree program offered by Udacity.
 
+[windows]: <http://www.postgresqltutorial.com/install-postgresql/>
+
+[maxos]: <https://www.postgresql.org/download/macosx/>
+
+[Sakila Database]: <https://www.postgresqltutorial.com/postgresql-sample-database/>
+
+[Load PostgreSQL Sample Database]: <https://www.postgresqltutorial.com/load-postgresql-sample-database/>
