@@ -1,0 +1,172 @@
+---------------------------------------------------------------
+-------------------------- Query 01 ---------------------------
+---------------------------------------------------------------
+
+--Q1: How many times the movies have been rented out in the family movies category? 
+-- The following categories are considered family movies: Animation, Children, Classics, Comedy, Family and Music.
+
+WITH family_movies 
+     AS (SELECT category_id, 
+                NAME 
+           FROM category 
+          WHERE NAME = 'Animation' 
+             OR NAME = 'Children' 
+             OR NAME = 'Classics' 
+             OR NAME = 'Comedy' 
+             OR NAME = 'Family' 
+             OR NAME = 'Music'), 
+     film_cat 
+     AS (SELECT f.film_id, 
+                f.title AS film_title, 
+                c.NAME  AS category_name 
+           FROM film_category fc 
+                JOIN family_movies c 
+                  ON fc.category_id = c.category_id 
+                JOIN film f 
+                  ON f.film_id = fc.film_id), 
+     film_rental 
+     AS (SELECT f.film_title, 
+                f.category_name, 
+                r.rental_id 
+           FROM film_cat f 
+                JOIN inventory i 
+                  ON f.film_id = i.film_id 
+                JOIN rental r 
+                  ON i.inventory_id = r.inventory_id) 
+SELECT fr.film_title, 
+       fr.category_name, 
+       Count(*) AS rental_count 
+  FROM film_rental fr 
+ GROUP BY 1, 
+          2 
+ ORDER BY 2, 
+          1; 
+---------------------------------------------------------------
+-------------------------- Query 02 ---------------------------
+---------------------------------------------------------------
+
+-- Q2. How many movies are there within each film category for each quartile?
+
+WITH family_movies 
+     AS (SELECT category_id, 
+                NAME 
+           FROM category 
+          WHERE NAME = 'Animation' 
+             OR NAME = 'Children' 
+             OR NAME = 'Classics' 
+             OR NAME = 'Comedy' 
+             OR NAME = 'Family' 
+             OR NAME = 'Music'), 
+     film_cat 
+     AS (SELECT f.title, 
+                c.NAME, 
+                f.rental_duration 
+           FROM film_category fc 
+                JOIN family_movies c 
+                  ON fc.category_id = c.category_id 
+                JOIN film f 
+                  ON f.film_id = fc.film_id), 
+     rental_comp 
+     AS (SELECT f.title, 
+                f.NAME, 
+                f.rental_duration, 
+                Ntile(4) 
+                  OVER ( 
+                    ORDER BY f.rental_duration) AS standard_quartile 
+           FROM film_cat f) 
+SELECT r.NAME, 
+       r.standard_quartile, 
+       Count(*) 
+  FROM rental_comp r 
+ GROUP BY 1, 
+          2 
+ ORDER BY 1, 
+          2; 
+
+---------------------------------------------------------------
+-------------------------- Query 03 ---------------------------
+---------------------------------------------------------------
+
+--Q3: Who were the top 10 paying customers? and how many payments they made on a monthly basis during 2007, and what was the amount of the monthly payments?
+
+WITH top10 
+     AS (SELECT customer_id, 
+                Sum(amount) AS pay_amount 
+           FROM payment 
+          WHERE Date_part('year',payment_date)= 2007 
+          GROUP BY 1 
+          ORDER BY 2 DESC 
+          LIMIT 10),
+     pay_amount
+     AS (SELECT Date_trunc('month', p.payment_date) AS pay_mon, 
+                p.customer_id, 
+                Count(p.amount) AS pay_countpermon, 
+                Sum(p.amount)   AS pay_amount 
+           FROM payment p 
+                JOIN top10 t 
+                  ON t.customer_id = p.customer_id 
+          GROUP BY 2, 
+                   1) 
+SELECT p.pay_mon, 
+       Concat(c.first_name, ' ', c.last_name) AS fullname, 
+       p.pay_countpermon, 
+       p.pay_amount 
+  FROM pay_amount p 
+       JOIN customer c 
+         ON p.customer_id = c.customer_id 
+ ORDER BY 2, 
+          1;
+
+---------------------------------------------------------------
+-------------------------- Query 04 ---------------------------
+---------------------------------------------------------------
+
+--Q4: For each of the top 10 paying customers, What is the difference across their monthly payments during 2007?
+
+WITH top10 
+     AS (SELECT customer_id, 
+                Sum(amount) AS pay_amount 
+           FROM payment 
+          GROUP BY 1 
+          ORDER BY 2 DESC
+          LIMIT 10), 
+     pay_amount
+     AS (SELECT Date_trunc('month', p.payment_date) AS pay_mon, 
+                p.customer_id, 
+                Count(p.amount) AS pay_countpermon, 
+                Sum(p.amount)   AS pay_amount 
+           FROM payment p 
+                JOIN top10 t 
+                  ON t.customer_id = p.customer_id 
+          GROUP BY 2, 
+                   1),
+     top10name
+     AS (SELECT p.pay_mon, 
+                Concat(c.first_name, ' ', c.last_name) AS fullname, 
+                p.pay_countpermon, 
+                p.pay_amount 
+           FROM pay_amount p 
+                JOIN customer c 
+                  ON p.customer_id = c.customer_id 
+          ORDER BY 2, 
+                   1),
+     most_diff 
+     AS (SELECT p.pay_mon, 
+                p.fullname, 
+                p.pay_countpermon, 
+                p.pay_amount, 
+                Lead(p.pay_amount) 
+                  OVER (partition BY p.fullname ORDER BY p.pay_amount) - p.pay_amount AS lead_difference
+           FROM top10name p) 
+SELECT pay_mon, 
+       fullname, 
+       pay_countpermon, 
+       pay_amount, 
+       COALESCE(lead_difference,0) AS lead_difference 
+  FROM most_diff;
+-- if we uncoment those two line we can get the customer name who paid the most difference in terms of payments.
+--ORDER BY lead_difference DESC
+--LIMIT 1;
+
+
+
