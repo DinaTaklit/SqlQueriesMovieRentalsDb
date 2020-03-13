@@ -10,9 +10,9 @@ Use SQL to explore a database related to movie rentals. This project uses: SQL j
 
 2. Q2. How many movies are there within each film category for each quartile? 
    
-3. Who were the top 10 paying customers? and how many payments they made on a monthly basis during 2007, and what was the amount of the monthly payments?
+3. Q3. Who were the top 10 paying customers? and how many payments they made on a monthly basis during 2007, and what was the amount of the monthly payments?
    
-4. For each of the top 10 paying customers, What is the difference across their monthly payments during 2007?
+4. Q4. For each of the top 10 paying customers, What is the difference across their monthly payments during 2007?
 
 ## Required Software
 
